@@ -102,6 +102,7 @@ func main() {
 		log.Fatal("must specify page template location")
 	}
 
+	RegisterSignalHandlers()
 	LoadTemplates()
 	BuildCache()
 
