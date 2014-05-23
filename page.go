@@ -1,0 +1,85 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/russross/blackfriday"
+)
+
+type Page struct {
+	Name     string
+	Path     string
+	Title    string
+	Body     string
+	Url      string
+	Rendered string
+}
+
+func NewPage(path string) (Page, error) {
+	var p Page
+	var err error
+	p.Path, err = filepath.Abs(path)
+	if err != nil {
+		return p, err
+	}
+	p.Name = filepath.Base(path)
+	p.Url = fmt.Sprintf("x/%s", p.Name)
+
+	mds, err := filepath.Glob(fmt.Sprintf("%s/*.md", p.Path))
+	if err != nil {
+		return p, err
+	}
+	if len(mds) == 0 {
+		return p, errors.New(
+			fmt.Sprintf("no markdown files for page %v", p.Name))
+	} else if len(mds) > 1 {
+		log.Printf("warning: more than one markdown file found for page %v, "+
+			"using %v", p.Name, mds[0])
+	}
+	p.Body = mds[0]
+
+	f, err := os.Open(p.Body)
+	if err != nil {
+		return p, err
+	}
+
+	var i int
+	buf := make([]byte, 256)
+	n, err := f.Read(buf)
+	if err != nil {
+		return p, err
+	}
+	for i = 0; i < n; i++ {
+		if buf[i] == '\n' {
+			break
+		}
+	}
+	p.Title = string(buf[:i])
+
+	return p, nil
+}
+
+func (p *Page) Load() error {
+	if len(p.Rendered) != 0 {
+		return nil
+	}
+	log.Printf("loading content for %v", p.Name)
+
+	data, err := ioutil.ReadFile(p.Body)
+	if err != nil {
+		return err
+	}
+	p.Rendered = string(blackfriday.MarkdownCommon(data))
+	return nil
+}
+
+type ByTitle []*Page
+
+func (a ByTitle) Len() int           { return len(a) }
+func (a ByTitle) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTitle) Less(i, j int) bool { return a[i].Title < a[j].Title }
