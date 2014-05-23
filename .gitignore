@@ -21,3 +21,7 @@ _testmain.go
 
 *.exe
 *.test
+test-index
+test-templates
+test-common
+sortastatic
