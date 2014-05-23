@@ -21,7 +21,9 @@ func BuildCache() {
 			log.Printf("page could not be loaded: %v", err)
 		} else {
 			pages[p.Name] = &p
-			sorted = append(sorted, &p)
+			if (p.Public) {
+				sorted = append(sorted, &p)
+			}
 			log.Printf("loaded: %v", p.Title)
 		}
 	}

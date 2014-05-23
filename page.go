@@ -18,6 +18,7 @@ type Page struct {
 	Body     string
 	Url      string
 	Rendered string
+	Public   bool
 }
 
 func NewPage(path string) (Page, error) {
@@ -43,16 +44,28 @@ func NewPage(path string) (Page, error) {
 	}
 	p.Body = mds[0]
 
-	f, err := os.Open(p.Body)
+	err = p.LoadTitle()
 	if err != nil {
 		return p, err
 	}
+
+	p.Public = p.isPublic()
+
+	return p, nil
+}
+
+func (p *Page) LoadTitle() error {
+	f, err := os.Open(p.Body)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
 	var i int
 	buf := make([]byte, 256)
 	n, err := f.Read(buf)
 	if err != nil {
-		return p, err
+		return err
 	}
 	for i = 0; i < n; i++ {
 		if buf[i] == '\n' {
@@ -60,8 +73,15 @@ func NewPage(path string) (Page, error) {
 		}
 	}
 	p.Title = string(buf[:i])
+	return nil
+}
 
-	return p, nil
+func (p Page) isPublic() bool {
+	f, err := os.Open(fmt.Sprintf("%s/draft", p.Path))
+	if err == nil {
+		f.Close()
+	}
+	return err != nil
 }
 
 func (p *Page) Load() error {
