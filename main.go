@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -136,18 +137,35 @@ func Write404(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PageHandler(w http.ResponseWriter, r *http.Request) {
+func Write500(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte("five hundred! shit! five! hundred!"))
+}
+
+type PageHandler struct{}
+func (_ PageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(path) < 2 {
+	if len(path) < 1 {
 		Write404(w, r)
 		return
 	}
-	// chop off leading 'x'
-	path = path[1:]
 	p, ok := pages[path[0]]
 	if !ok {
 		Write404(w, r)
 	} else {
+		if r.URL.RawQuery == "raw" {
+			f, err := os.Open(p.Body)
+			if err != nil {
+				Write500(w, r)
+				return
+			}
+			_, err = io.Copy(w, f)
+			if err != nil {
+				Write500(w, r)
+			}
+			return
+		}
+
 		if len(path) == 1 {
 			p.Load()
 			pageTemplate.Execute(w, p)
@@ -187,7 +205,7 @@ func main() {
 	BuildCache()
 
 	http.HandleFunc("/", IndexHandler)
-	http.HandleFunc("/x/", PageHandler)
+	http.Handle("/x/", http.StripPrefix("/x/", PageHandler{}))
 	if *commondir != "" {
 		log.Printf("using %v as the common directory", *commondir)
 		http.Handle("/c/", http.StripPrefix("/c/",
