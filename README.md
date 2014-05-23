@@ -33,7 +33,9 @@ title.
 
 If you want to prevent a page from showing up on the index but still want it to
 be accessible through direct links, you can place a file named "draft" in its
-page directory. The contents of the draft file are ignored.
+page directory. The contents of the draft file are ignored. To ignore a
+directory entirely (no page at all, not even by URL), place an empty file called
+"ignore" in the directory.
 
 sortastatic makes heavy use of caching; pages are enumerated and templates are
 loaded at start time, and Markdown content is lazily rendered, then cached.

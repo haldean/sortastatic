@@ -49,7 +49,7 @@ func NewPage(path string) (Page, error) {
 		return p, err
 	}
 
-	p.Public = p.isPublic()
+	p.Public = !FileExists(fmt.Sprintf("%s/draft", p.Path))
 
 	return p, nil
 }
@@ -74,14 +74,6 @@ func (p *Page) LoadTitle() error {
 	}
 	p.Title = string(buf[:i])
 	return nil
-}
-
-func (p Page) isPublic() bool {
-	f, err := os.Open(fmt.Sprintf("%s/draft", p.Path))
-	if err == nil {
-		f.Close()
-	}
-	return err != nil
 }
 
 func (p *Page) Load() error {

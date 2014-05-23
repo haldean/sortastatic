@@ -3,9 +3,16 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"path/filepath"
 	"sort"
 )
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
 
 func BuildCache() {
 	pages = make(map[string]*Page)
@@ -16,6 +23,13 @@ func BuildCache() {
 		log.Printf("error when finding files: %v", err)
 	}
 	for i := 0; i < len(paths); i++ {
+		if FileExists(fmt.Sprintf("%s/ignore", paths[i])) {
+			continue;
+		}
+		if (path.Base(paths[i])[0] == '.') {
+			// skip dotfiles
+			continue;
+		}
 		p, err := NewPage(paths[i])
 		if err != nil {
 			log.Printf("page could not be loaded: %v", err)
