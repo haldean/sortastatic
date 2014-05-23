@@ -34,3 +34,16 @@ title.
 If you want to prevent a page from showing up on the index but still want it to
 be accessible through direct links, you can place a file named "draft" in its
 page directory. The contents of the draft file are ignored.
+
+sortastatic makes heavy use of caching; pages are enumerated and templates are
+loaded at start time, and Markdown content is lazily rendered, then cached.
+If you want to force a cache flush without restarting the process (which will
+reload templates and the page list, and clear all cached rendered content), send
+the sortastatic process a SIGUSR1 signal (this only works on Unices, sorry
+Windows users). There's a convenience utility built into sortastatic to do this;
+just run `sortastatic -reload`.
+
+## Requirements
+
+* github.com/russross/blackfriday
+  Really easy-to-use Markdown library. &lt;3.

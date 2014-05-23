@@ -15,6 +15,7 @@ var itemplate = flag.String("index-template", "", "location of index template")
 var nftemplate = flag.String("404-template", "", "location of 404 page template")
 var ptemplate = flag.String("page-template", "", "location of page template")
 var commondir = flag.String("common-dir", "", "location of files shared between pages")
+var reload = flag.Bool("reload", false, "reload a running instance of sortastatic")
 
 var pages map[string]*Page
 var sorted []*Page
@@ -92,6 +93,11 @@ func LoadTemplates() {
 
 func main() {
 	flag.Parse()
+	if *reload {
+		SendReload()
+		return
+	}
+
 	if *index == "" {
 		log.Fatal("must specify index location")
 	}
