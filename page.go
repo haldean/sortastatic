@@ -29,7 +29,7 @@ func NewPage(path string) (Page, error) {
 		return p, err
 	}
 	p.Name = filepath.Base(path)
-	p.Url = fmt.Sprintf("x/%s", p.Name)
+	p.Url = fmt.Sprintf("%s/", p.Name)
 
 	mds, err := filepath.Glob(fmt.Sprintf("%s/*.md", p.Path))
 	if err != nil {
@@ -86,7 +86,7 @@ func (p *Page) Load() error {
 	if err != nil {
 		return err
 	}
-	p.Rendered = string(blackfriday.MarkdownCommon(data))
+	p.Rendered = string(blackfriday.MarkdownBasic(data))
 	return nil
 }
 

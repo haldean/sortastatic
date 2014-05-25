@@ -2,11 +2,8 @@ package main
 
 import (
 	"flag"
-	"io"
 	"log"
 	"net/http"
-	"os"
-	"strings"
 	"text/template"
 )
 
@@ -22,58 +19,6 @@ var sorted []*Page
 var indexTemplate *template.Template
 var pageTemplate *template.Template
 var notFoundTemplate *template.Template
-
-func Write404(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	if notFoundTemplate != nil {
-		notFoundTemplate.Execute(w, r)
-	} else {
-		w.Write([]byte("four oh four, yo. four. zero. four."))
-	}
-}
-
-func Write500(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("five hundred! shit! five! hundred!"))
-}
-
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	indexTemplate.Execute(w, sorted)
-}
-
-// PageHandler is a Handler instead of a HandlerFunc so we can wrap it in a
-// StripPrefix.
-type PageHandler struct{}
-
-func (_ PageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(path) < 1 {
-		Write404(w, r)
-		return
-	}
-	p, ok := pages[path[0]]
-	if !ok {
-		Write404(w, r)
-	} else {
-		if r.URL.RawQuery == "raw" {
-			f, err := os.Open(p.Body)
-			if err != nil {
-				Write500(w, r)
-				return
-			}
-			_, err = io.Copy(w, f)
-			if err != nil {
-				Write500(w, r)
-			}
-			return
-		}
-
-		if len(path) == 1 {
-			p.Load()
-			pageTemplate.Execute(w, p)
-		}
-	}
-}
 
 func LoadTemplates() {
 	var err error
@@ -112,12 +57,5 @@ func main() {
 	LoadTemplates()
 	BuildCache()
 
-	http.HandleFunc("/", IndexHandler)
-	http.Handle("/x/", http.StripPrefix("/x/", PageHandler{}))
-	if *commondir != "" {
-		log.Printf("using %v as the common directory", *commondir)
-		http.Handle("/c/", http.StripPrefix("/c/",
-			http.FileServer(http.Dir(*commondir))))
-	}
-	log.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8080", NewMux(*commondir)))
 }
