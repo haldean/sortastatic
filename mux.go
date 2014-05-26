@@ -67,7 +67,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	if !strings.HasSuffix(r.URL.Path, "/") {
-		http.Redirect(w, r, r.URL.Path + "/", http.StatusMovedPermanently)
+		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
 		return true
 	}
 

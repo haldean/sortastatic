@@ -33,52 +33,20 @@ func NewPage(path string) (Page, error) {
 		return p, err
 	}
 	p.Name = filepath.Base(path)
+	p.Url = fmt.Sprintf("%s/", p.Name)
+	p.Public = !FileExists(fmt.Sprintf("%s/draft", p.Path))
+
 	log.Printf("loading %s", p.Name)
 
-	p.Url = fmt.Sprintf("%s/", p.Name)
-
-	index := fmt.Sprintf("%s/index.html", p.Path)
-	log.Printf("  looking for index %s", index)
-	if FileExists(index) {
-		log.Printf("  using index file")
-		p.UseMarkdown = false
-		p.Body = index
-	} else {
-		mds, err := filepath.Glob(fmt.Sprintf("%s/*.md", p.Path))
-		if err != nil {
-			return p, err
-		}
-		if len(mds) == 1 {
-			p.Body = mds[0]
-			p.UseMarkdown = true
-		} else if len(mds) == 0 {
-			return p, errors.New(
-				fmt.Sprintf("no markdown files or index for page %v", p.Name))
-		} else if len(mds) > 1 {
-			log.Printf("warning: more than one markdown file found for page %v, "+
-				"using %v", p.Name, mds[0])
-			p.Body = mds[0]
-			p.UseMarkdown = true
-		}
-
-		p.Stylesheets = make([]string, 0)
-		ss, err := filepath.Glob(fmt.Sprintf("%s/*.css", p.Path))
-		if err != nil {
-			log.Printf("  stylesheets couldn't be loaded: %v", err)
-		} else {
-			log.Printf("  found %d stylesheets", len(ss))
-			for _, s := range ss {
-				p.Stylesheets = append(p.Stylesheets, filepath.Base(s))
-			}
-		}
+	err = p.FindBody()
+	if err != nil {
+		return p, err
 	}
 
 	err = p.LoadTitle()
 	if err != nil {
 		return p, err
 	}
-
-	p.Public = !FileExists(fmt.Sprintf("%s/draft", p.Path))
 
 	return p, nil
 }
@@ -102,6 +70,46 @@ func (p *Page) LoadTitle() error {
 		}
 	}
 	p.Title = StripHtmlComments(string(buf[:i]))
+	return nil
+}
+
+func (p *Page) FindBody() error {
+	index := fmt.Sprintf("%s/index.html", p.Path)
+	if FileExists(index) {
+		log.Printf("  using index file")
+		p.UseMarkdown = false
+		p.Body = index
+		return nil
+	}
+
+	mds, err := filepath.Glob(fmt.Sprintf("%s/*.md", p.Path))
+	if err != nil {
+		return err
+	}
+	if len(mds) == 1 {
+		p.Body = mds[0]
+		p.UseMarkdown = true
+	} else if len(mds) == 0 {
+		return errors.New(
+			fmt.Sprintf("no markdown files or index for page %v", p.Name))
+	} else if len(mds) > 1 {
+		log.Printf("warning: more than one markdown file found for page "+
+			"%v, using %v", p.Name, mds[0])
+		p.Body = mds[0]
+		p.UseMarkdown = true
+	}
+
+	p.Stylesheets = make([]string, 0)
+	ss, err := filepath.Glob(fmt.Sprintf("%s/*.css", p.Path))
+	if err != nil {
+		log.Printf("  stylesheets couldn't be loaded: %v", err)
+	} else {
+		log.Printf("  found %d stylesheets", len(ss))
+		for _, s := range ss {
+			p.Stylesheets = append(p.Stylesheets, filepath.Base(s))
+		}
+	}
+
 	return nil
 }
 
