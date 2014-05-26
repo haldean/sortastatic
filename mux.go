@@ -66,6 +66,11 @@ func PageHandler(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
+	if !strings.HasSuffix(r.URL.Path, "/") {
+		http.Redirect(w, r, r.URL.Path + "/", http.StatusMovedPermanently)
+		return true
+	}
+
 	if len(urlpath) == 1 {
 		if r.URL.RawQuery == "raw" || !p.UseMarkdown {
 			ServeFile(p.Body, w, r)
