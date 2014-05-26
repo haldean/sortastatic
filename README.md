@@ -49,5 +49,4 @@ just run `sortastatic -reload`.
 
 ## Requirements
 
-* [github.com/russross/blackfriday](github.com/russross/blackfriday)
-  Really easy-to-use Markdown library. &lt;3.
+* [github.com/haldean/gommd](github.com/haldean/gommd)
