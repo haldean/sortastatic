@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/haldean/gommd"
 )
@@ -134,6 +135,8 @@ func (p *Page) Load() error {
 
 type ByTitle []*Page
 
-func (a ByTitle) Len() int           { return len(a) }
-func (a ByTitle) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByTitle) Less(i, j int) bool { return a[i].Title < a[j].Title }
+func (a ByTitle) Len() int      { return len(a) }
+func (a ByTitle) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByTitle) Less(i, j int) bool {
+	return strings.ToLower(a[i].Title) < strings.ToLower(a[j].Title)
+}
