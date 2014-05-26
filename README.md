@@ -19,13 +19,15 @@ Go templates are used to render the pages; the structure passed to the page
 template is:
 
       type Page struct {
-        Name     string
-        Path     string
-        Title    string
-        Body     string
-        Url      string
-        Rendered string
-        Public   bool
+          Name        string
+          Path        string
+          Title       string
+          Body        string
+          Url         string
+          Rendered    string
+          Stylesheets []string
+          UseMarkdown bool
+          Public      bool
       }
 
 The structure passed to the index page is a list of page structs sorted by
