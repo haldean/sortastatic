@@ -12,14 +12,15 @@ import (
 )
 
 type Page struct {
-	Name     string
-	Path     string
-	Title    string
-	Body     string
-	Url      string
-	Rendered string
+	Name        string
+	Path        string
+	Title       string
+	Body        string
+	Url         string
+	Rendered    string
+	Stylesheets []string
 	UseMarkdown bool
-	Public   bool
+	Public      bool
 }
 
 func NewPage(path string) (Page, error) {
@@ -30,10 +31,14 @@ func NewPage(path string) (Page, error) {
 		return p, err
 	}
 	p.Name = filepath.Base(path)
+	log.Printf("loading %s", p.Name)
+
 	p.Url = fmt.Sprintf("%s/", p.Name)
 
 	index := fmt.Sprintf("%s/index.html", p.Path)
+	log.Printf("  looking for index %s", index)
 	if FileExists(index) {
+		log.Printf("  using index file")
 		p.UseMarkdown = false
 		p.Body = index
 	} else {
@@ -52,6 +57,17 @@ func NewPage(path string) (Page, error) {
 				"using %v", p.Name, mds[0])
 			p.Body = mds[0]
 			p.UseMarkdown = true
+		}
+
+		p.Stylesheets = make([]string, 0)
+		ss, err := filepath.Glob(fmt.Sprintf("%s/*.css", p.Path))
+		if err != nil {
+			log.Printf("  stylesheets couldn't be loaded: %v", err)
+		} else {
+			log.Printf("  found %d stylesheets", len(ss))
+			for _, s := range ss {
+				p.Stylesheets = append(p.Stylesheets, filepath.Base(s))
+			}
 		}
 	}
 

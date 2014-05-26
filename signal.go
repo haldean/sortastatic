@@ -12,7 +12,7 @@ import (
 )
 
 var pidfile = flag.String(
-		"pidfile", "/tmp/sortastatic.pid", "file to write PID to")
+	"pidfile", "/tmp/sortastatic.pid", "file to write PID to")
 
 func WritePidfile() {
 	f, err := os.Create(*pidfile)

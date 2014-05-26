@@ -14,5 +14,5 @@ func StripHtmlComments(line string) string {
 	if !strings.HasPrefix(line, "<!--") || !strings.HasSuffix(line, "-->") {
 		return line
 	}
-	return strings.TrimSpace(line[4:len(line)-3])
+	return strings.TrimSpace(line[4 : len(line)-3])
 }

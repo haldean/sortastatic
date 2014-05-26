@@ -24,21 +24,21 @@ func BuildCache() {
 	}
 	for i := 0; i < len(paths); i++ {
 		if FileExists(fmt.Sprintf("%s/ignore", paths[i])) {
-			continue;
+			continue
 		}
-		if (path.Base(paths[i])[0] == '.') {
+		if path.Base(paths[i])[0] == '.' {
 			// skip dotfiles
-			continue;
+			continue
 		}
 		p, err := NewPage(paths[i])
 		if err != nil {
-			log.Printf("page could not be loaded: %v", err)
+			log.Printf("  page could not be loaded: %v", err)
 		} else {
 			pages[p.Name] = &p
-			if (p.Public) {
+			if p.Public {
 				sorted = append(sorted, &p)
 			}
-			log.Printf("loaded: %v", p.Title)
+			log.Printf("  loaded: %v", p.Title)
 		}
 	}
 	sort.Sort(ByTitle(sorted))
