@@ -67,7 +67,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	if len(urlpath) == 1 {
-		if r.URL.RawQuery == "raw" {
+		if r.URL.RawQuery == "raw" || !p.UseMarkdown {
 			ServeFile(p.Body, w, r)
 		} else {
 			p.Load()
@@ -89,6 +89,11 @@ func PageHandler(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func ServeFile(fpath string, w http.ResponseWriter, r *http.Request) {
+	mimetype := MimeType(fpath)
+	if mimetype != "" {
+		w.Header().Add("Content-type", mimetype)
+	}
+
 	f, err := os.Open(fpath)
 	if err != nil {
 		Write500(w, r)

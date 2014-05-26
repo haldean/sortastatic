@@ -18,6 +18,7 @@ type Page struct {
 	Body     string
 	Url      string
 	Rendered string
+	UseMarkdown bool
 	Public   bool
 }
 
@@ -31,18 +32,28 @@ func NewPage(path string) (Page, error) {
 	p.Name = filepath.Base(path)
 	p.Url = fmt.Sprintf("%s/", p.Name)
 
-	mds, err := filepath.Glob(fmt.Sprintf("%s/*.md", p.Path))
-	if err != nil {
-		return p, err
+	index := fmt.Sprintf("%s/index.html", p.Path)
+	if FileExists(index) {
+		p.UseMarkdown = false
+		p.Body = index
+	} else {
+		mds, err := filepath.Glob(fmt.Sprintf("%s/*.md", p.Path))
+		if err != nil {
+			return p, err
+		}
+		if len(mds) == 1 {
+			p.Body = mds[0]
+			p.UseMarkdown = true
+		} else if len(mds) == 0 {
+			return p, errors.New(
+				fmt.Sprintf("no markdown files or index for page %v", p.Name))
+		} else if len(mds) > 1 {
+			log.Printf("warning: more than one markdown file found for page %v, "+
+				"using %v", p.Name, mds[0])
+			p.Body = mds[0]
+			p.UseMarkdown = true
+		}
 	}
-	if len(mds) == 0 {
-		return p, errors.New(
-			fmt.Sprintf("no markdown files for page %v", p.Name))
-	} else if len(mds) > 1 {
-		log.Printf("warning: more than one markdown file found for page %v, "+
-			"using %v", p.Name, mds[0])
-	}
-	p.Body = mds[0]
 
 	err = p.LoadTitle()
 	if err != nil {
@@ -72,7 +83,7 @@ func (p *Page) LoadTitle() error {
 			break
 		}
 	}
-	p.Title = string(buf[:i])
+	p.Title = StripHtmlComments(string(buf[:i]))
 	return nil
 }
 
@@ -86,7 +97,11 @@ func (p *Page) Load() error {
 	if err != nil {
 		return err
 	}
-	p.Rendered = string(blackfriday.MarkdownBasic(data))
+	if p.UseMarkdown {
+		p.Rendered = string(blackfriday.MarkdownBasic(data))
+	} else {
+		p.Rendered = string(data)
+	}
 	return nil
 }
 
