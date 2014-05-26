@@ -8,8 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/russross/blackfriday"
+	"github.com/haldean/gommd"
 )
+
+const mmdflags = gommd.EXT_PROCESS_HTML
 
 type Page struct {
 	Name        string
@@ -114,7 +116,8 @@ func (p *Page) Load() error {
 		return err
 	}
 	if p.UseMarkdown {
-		p.Rendered = string(blackfriday.MarkdownBasic(data))
+		p.Rendered = gommd.MarkdownToString(
+			string(data), mmdflags, gommd.FORMAT_HTML)
 	} else {
 		p.Rendered = string(data)
 	}
