@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -22,6 +23,7 @@ func NewMux(commonPath string) Mux {
 }
 
 func (m Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%s %s : %s", r.Method, r.URL, r.Header.Get("User-Agent"))
 	if r.URL.Path == "/" {
 		IndexHandler(w, r)
 		return
@@ -66,7 +68,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
-	if !strings.HasSuffix(r.URL.Path, "/") {
+	if len(urlpath) == 1 && !strings.HasSuffix(r.URL.Path, "/") {
 		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
 		return true
 	}
