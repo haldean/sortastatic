@@ -12,7 +12,7 @@ import (
 	"github.com/haldean/gommd"
 )
 
-const mmdflags = gommd.EXT_PROCESS_HTML
+const mmdflags = gommd.EXT_PROCESS_HTML | gommd.EXT_SMART
 
 type Page struct {
 	Name        string
