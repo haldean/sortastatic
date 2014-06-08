@@ -17,7 +17,7 @@ func NewMux(commonPath string) Mux {
 	var m Mux
 	if commonPath != "" {
 		m.commonHandler = http.StripPrefix(
-			"/c/", http.FileServer(http.Dir(commonPath)))
+			"/c/", CommonHandler{root: commonPath})
 	}
 	return m
 }
@@ -28,11 +28,11 @@ func (m Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		IndexHandler(w, r)
 		return
 	}
-	if PageHandler(w, r) {
-		return
-	}
 	if strings.HasPrefix(r.URL.Path, "/c/") {
 		m.commonHandler.ServeHTTP(w, r)
+		return
+	}
+	if PageHandler(w, r) {
 		return
 	}
 	Write404(w, r)
@@ -75,8 +75,10 @@ func PageHandler(w http.ResponseWriter, r *http.Request) bool {
 
 	if len(urlpath) == 1 {
 		if r.URL.RawQuery == "raw" || !p.UseMarkdown {
+			w.Header().Add("Content-Type", "text/plain")
 			ServeFile(p.Body, w, r)
 		} else {
+			w.Header().Add("Content-Type", "text/html")
 			p.Load()
 			pageTemplate.Execute(w, p)
 		}
@@ -95,10 +97,23 @@ func PageHandler(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
+type CommonHandler struct{
+	root string
+}
+
+func (c CommonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fpath := path.Clean(path.Join(c.root, r.URL.Path))
+	if !strings.HasPrefix(fpath, c.root) {
+		Write404(w, r)
+		return
+	}
+	ServeFile(fpath, w, r)
+}
+
 func ServeFile(fpath string, w http.ResponseWriter, r *http.Request) {
 	mimetype := MimeType(fpath)
 	if mimetype != "" {
-		w.Header().Add("Content-type", mimetype)
+		w.Header().Add("Content-Type", mimetype)
 	}
 
 	f, err := os.Open(fpath)

@@ -59,5 +59,5 @@ func main() {
 	BuildCache()
 
 	log.Printf("binding to %s", *bindAddr)
-	log.Fatal(http.ListenAndServe(*bindAddr, NewMux(*static)))
+	log.Fatal(http.ListenAndServe(*bindAddr, Compress(NewMux(*static))))
 }
