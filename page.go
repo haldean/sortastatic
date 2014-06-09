@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/haldean/gommd"
 )
@@ -22,6 +23,7 @@ type Page struct {
 	Url         string
 	Rendered    string
 	Stylesheets []string
+	Modified	time.Time
 	UseMarkdown bool
 	Public      bool
 }
@@ -49,6 +51,11 @@ func NewPage(path string) (Page, error) {
 		return p, err
 	}
 
+	err = p.LoadModTime()
+	if err != nil {
+		return p, err
+	}
+
 	return p, nil
 }
 
@@ -72,6 +79,26 @@ func (p *Page) LoadTitle() error {
 	}
 	p.Title = StripHtmlComments(string(buf[:i]))
 	return nil
+}
+
+func (p *Page) LoadModTime() error {
+	f, err := os.Open(fmt.Sprintf("%s/date", p.Path))
+	if err != nil {
+		log.Printf("  warning: no datefile found, using body's mod time")
+		stat, err := os.Stat(p.Body)
+		if err != nil {
+			return err
+		}
+		p.Modified = stat.ModTime()
+		return nil
+	}
+	dateBytes, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	date := strings.TrimSpace(string(dateBytes))
+	p.Modified, err = time.Parse(time.UnixDate, date)
+	return err
 }
 
 func (p *Page) FindBody() error {
@@ -138,5 +165,8 @@ type ByTitle []*Page
 func (a ByTitle) Len() int      { return len(a) }
 func (a ByTitle) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByTitle) Less(i, j int) bool {
+	if a[i].Modified != a[j].Modified {
+		return a[i].Modified.After(a[j].Modified)
+	}
 	return strings.ToLower(a[i].Title) < strings.ToLower(a[j].Title)
 }

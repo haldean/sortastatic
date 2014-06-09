@@ -4,8 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"path"
-	"text/template"
 )
 
 var index = flag.String("index", "", "location of markdown files")
@@ -16,29 +14,6 @@ var bindAddr = flag.String("bind", "127.0.0.1:8080", "address/port to bind to")
 
 var pages map[string]*Page
 var sorted []*Page
-var indexTemplate *template.Template
-var pageTemplate *template.Template
-var notFoundTemplate *template.Template
-
-func LoadTemplates() {
-	var tpath = func(template string) string {
-		return path.Join(*templates, template + ".html")
-	}
-
-	var err error
-	indexTemplate, err = template.ParseFiles(tpath("index"))
-	if err != nil {
-		log.Fatalf("could not load index template: %v", err)
-	}
-	pageTemplate, err = template.ParseFiles(tpath("page"))
-	if err != nil {
-		log.Fatalf("could not load page template: %v", err)
-	}
-	notFoundTemplate, err = template.ParseFiles(tpath("404"))
-	if err != nil {
-		log.Printf("warning: could not load 404 template: %v", err)
-	}
-}
 
 func main() {
 	flag.Parse()
