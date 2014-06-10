@@ -12,7 +12,7 @@ var pageTemplate *template.Template
 var notFoundTemplate *template.Template
 
 func FormatDate(t time.Time) string {
-	return t.Format("2006-01-02")
+	return t.Format("2006-01")
 }
 
 func LoadTemplates() {
