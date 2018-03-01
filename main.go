@@ -3,20 +3,24 @@ package main
 import (
 	"flag"
 	"log"
+	"net"
 	"net/http"
+	"github.com/lemenkov/systemd.go"
 )
 
 var index = flag.String("index", "", "location of markdown files")
 var templates = flag.String("templates", "", "location of page template")
 var static = flag.String("static", "", "location of files shared between pages")
 var reload = flag.Bool("reload", false, "reload a running instance of sortastatic")
-var watch = flag.Bool("watch", true, "watch for file changes and reload automatically")
-var bindAddr = flag.String("bind", "127.0.0.1:8080", "address/port to bind to")
+var watch = flag.Bool("watch", false, "watch for file changes and reload automatically")
 
 var pages map[string]*Page
 var sorted []*Page
 
 func main() {
+	var listener net.Listener
+	var err error
+
 	flag.Parse()
 	if *reload {
 		SendReload()
@@ -38,6 +42,14 @@ func main() {
 		Watch()
 	}
 
-	log.Printf("binding to %s", *bindAddr)
-	log.Fatal(http.ListenAndServe(*bindAddr, Compress(NewMux(*static))))
+	sockets := systemd.ListenFds()
+	if sockets == nil {
+		listener, err = net.Listen("unix", "/tmp/sortastatic.socket")
+	} else {
+		listener, err = net.FileListener(sockets[0])
+	}
+	if err != nil {
+		panic(err);
+	}
+	log.Fatal(http.Serve(listener, Compress(NewMux(*static))))
 }
